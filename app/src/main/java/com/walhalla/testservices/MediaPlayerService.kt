@@ -246,6 +246,9 @@ class MediaPlayerService : Service() {
     }
 
     private fun updateNotificationTimer() {
+
+        //Тут обновление пуша, + можно добавить работу с сетью
+
         val elapsedTime = System.currentTimeMillis() - startTime
         val hours = TimeUnit.MILLISECONDS.toHours(elapsedTime)
         val minutes = TimeUnit.MILLISECONDS.toMinutes(elapsedTime) % 60
