@@ -11,7 +11,9 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.os.Build
+import android.os.Handler
 import android.os.IBinder
+import android.os.Looper
 import android.os.Parcelable
 import android.util.Log
 import android.widget.Toast
@@ -20,6 +22,7 @@ import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import com.walhalla.testservices.activity.MainActivity
 import kotlinx.parcelize.Parcelize
+import java.util.concurrent.TimeUnit
 
 class MediaPlayerService : Service() {
 
@@ -27,12 +30,20 @@ class MediaPlayerService : Service() {
     val TAG = "@@@"
 
 
+    private var startTime: Long = 0L
     private var builder: NotificationCompat.Builder? = null
     private var mNotificationManager: NotificationManager? = null
+    private val handler = Handler(Looper.getMainLooper())
+    private val updateTimerRunnable = object : Runnable {
+        override fun run() {
+            updateNotificationTimer()
+            handler.postDelayed(this, 1000)
+        }
+    }
 
     override fun onCreate() {
         super.onCreate()
-
+        startTime = System.currentTimeMillis()
     }
 
 
@@ -48,7 +59,7 @@ class MediaPlayerService : Service() {
         } else if (Constants.ACTION.STARTFOREGROUND_ACTION == intent.action) {
             Log.i(TAG, "Received Start Foreground Intent ")
             showNotification(applicationContext)
-
+            handler.post(updateTimerRunnable)
             Toast.makeText(this, "Service Started!", Toast.LENGTH_SHORT).show();
         } else if (Constants.ACTION.PREV_ACTION == intent.action) {
             Log.i(TAG, "Clicked Previous")
@@ -57,7 +68,7 @@ class MediaPlayerService : Service() {
             //            Toast.makeText(this, "Clicked Previous!", Toast.LENGTH_SHORT)
 //                    .show();
         }
-        //        else if (Constants.ACTION.PLAY_ACTION == intent.action) {
+//        else if (Constants.ACTION.PLAY_ACTION == intent.action) {
 //            val __tmp = intent.getParcelableArrayListExtra<Item>(Constants.EXTRA.ITEM_KEY)
 //            if (__tmp != null) {
 //                list.clear()
@@ -152,8 +163,8 @@ class MediaPlayerService : Service() {
         builder!!.setPriority(Notification.PRIORITY_HIGH)
             .setCategory(Notification.CATEGORY_SERVICE)
             .setTicker(title)
-            .setContentText(title) //.setContent(var3)
-            //-->.setSmallIcon(NOTIFICATION_SMALL_ICON) //.setLargeIcon(Bitmap.createScaledBitmap(icon2, 0, 0, false))//Bitmap.createScaledBitmap(icon, 128, 128, false)
+            .setContentText("Время работы: 00:00:00")
+            .setSmallIcon(R.mipmap.ic_launcher)
             .setContentIntent(pendingIntent)
             .setOngoing(true)
         //@@@         .addAction(android.R.drawable.ic_media_previous, context.getString(R.string.action_previous),ppreviousIntent)
@@ -164,6 +175,7 @@ class MediaPlayerService : Service() {
     }
 
     override fun onTaskRemoved(rootIntent: Intent) {
+        handler.removeCallbacks(updateTimerRunnable)
         stopSelf()
         super.onTaskRemoved(rootIntent)
     }
@@ -206,6 +218,7 @@ class MediaPlayerService : Service() {
         Log.i(TAG, "In onDestroy")
         //pm!!.releaseService()
         //Toast.makeText(this, "Service Detroyed!", Toast.LENGTH_SHORT).show();
+        handler.removeCallbacks(updateTimerRunnable)
     }
 
     override fun onBind(intent: Intent): IBinder? {
@@ -231,6 +244,17 @@ class MediaPlayerService : Service() {
             stopSelf()
         }
         return "snap map channel"
+    }
+
+    private fun updateNotificationTimer() {
+        val elapsedTime = System.currentTimeMillis() - startTime
+        val hours = TimeUnit.MILLISECONDS.toHours(elapsedTime)
+        val minutes = TimeUnit.MILLISECONDS.toMinutes(elapsedTime) % 60
+        val seconds = TimeUnit.MILLISECONDS.toSeconds(elapsedTime) % 60
+        val timeString = String.format("%02d:%02d:%02d", hours, minutes, seconds)
+        
+        builder?.setContentText("Время работы: $timeString")
+        mNotificationManager?.notify(Constants.NOTIFICATION_ID.FOREGROUND_SERVICE, builder?.build())
     }
 
 //        override fun playerStateEnded(playWhenReady: Boolean, playbackState: Int) {
