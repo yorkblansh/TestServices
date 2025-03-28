@@ -87,15 +87,9 @@ class MediaPlayerService : Service() {
         else {
             ""
         }
-        val notificationIntent = Intent(
-            this,
-            MainActivity::class.java
-        )
+        val notificationIntent = Intent(this, MainActivity::class.java)
         notificationIntent.setAction(Constants.ACTION.MAIN_ACTION)
-        notificationIntent.setFlags(
-            Intent.FLAG_ACTIVITY_NEW_TASK
-                    or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        )
+        notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
         val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         } else {
