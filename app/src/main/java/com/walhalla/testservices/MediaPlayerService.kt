@@ -175,8 +175,7 @@ class MediaPlayerService : Service() {
     }
 
     override fun onTaskRemoved(rootIntent: Intent) {
-        handler.removeCallbacks(updateTimerRunnable)
-        stopSelf()
+        // Сервис должен продолжать работать после закрытия активности
         super.onTaskRemoved(rootIntent)
     }
 
